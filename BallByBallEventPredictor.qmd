@@ -1,0 +1,742 @@
+---
+jupyter: python3
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+```
+
+```{python}
+df = pd.read_csv('deliveries.csv', encoding = "ISO-8859-1", na_filter=False)
+```
+
+```{python}
+df.head()
+```
+
+```{python}
+df.tail()
+```
+
+```{python}
+df.shape
+```
+
+```{python}
+df.columns
+```
+
+```{python}
+df.isna().sum()
+```
+
+```{python}
+df.dtypes
+```
+
+```{python}
+df.batting_team.unique() 
+```
+
+```{python}
+#| scrolled: true
+columns_to_remove = ['batsman', 'non_striker', 'player_dismissed', 'fielder']
+df.drop(labels=columns_to_remove, axis=1, inplace=True)
+```
+
+```{python}
+df.head()
+```
+
+```{python}
+# Renaming the teams with their latest names
+
+df.loc[(df.batting_team=='Delhi Daredevils'),'batting_team'] = 'Delhi Capitals'
+df.loc[(df.bowling_team=='Delhi Daredevils'),'bowling_team'] = 'Delhi Capitals'
+
+df.loc[(df.batting_team=='Deccan Chargers'),'batting_team'] = 'Sunrisers Hyderabad'
+df.loc[(df.bowling_team=='Deccan Chargers'),'bowling_team'] = 'Sunrisers Hyderabad'
+
+# sanity check
+print(df.loc[(df.batting_team=='Delhi Daredevils')|(df.bowling_team=='Delhi Daredevils')])
+print(df.loc[(df.batting_team=='Deccan Chargers')|(df.bowling_team=='Deccan Chargers')])
+```
+
+```{python}
+# Replacing all spinner names with 'spinner' and all pacer names with 'pacer' under `bowler` column
+
+rcb_spin = ['SB Joshi', 'KP Appanna', 'A Kumble', 'J Arunkumar', 'Abdur Razzak', 'CL White', 'TM Dilshan',
+            'KP Pietersen', 'RE van der Merwe', 'S Sriram', 'DL Vettori', 'KB Arun Karthik', 'CH Gayle', 'S Sriram',
+            'AA Kazi', 'R Ninan', 'J Syed Mohammad', 'M Muralitharan', 'M Kartik', 'P R Barman', 
+            'YS Chahal', 'Yuvraj Singh', 'SB Jakati', 'Iqbal Abdulla', 'T Shamsi', 'Parvez Rasool', 
+            'S Baby', 'TM Head', 'KM Jadhav', 'P Negi', 'S Badree', 'Washington Sundar', 'M Ali', 'M Ashwin']
+
+mi_spin = ['A Dananjaya', 'AG Murtaza', 'A Roy', 'GJ Maxwell', 'Harbhajan Singh', 'J Suchith', 'J Yadav',
+           'JP Duminy', 'KH Pandya', 'KV Sharma', 'M Markande', 'N Rana', 'PP Ojha', 'RD Chahar', 'RG Sharma',
+           'RJ Peterson', 'RW Price', 'S Gopal', 'SD Chitnis', 'ST Jayasuriya', 'TL Suman', 'VS Yeligati']
+
+kkr_spin = ['BAW Mendis','BJ Hodge', 'DJ Hussey', 'GB Hogg', 'J Botha', 'KC Cariappa', 'M Kartik', 'CH Gayle', 
+            'Iqbal Abdulla', 'Kuldeep Yadav', 'MB Parmar', 'MK Tiwary', 'Mohammad Hafeez', 'N Rana', 
+            'PP Chawla', 'RS Gavaskar', 'S Ladda', 'Shakib Al Hasan', 'SMSM Senanayake', 'SP Narine', 'YK Pathan']
+
+csk_spin = ['DJ Hussey', 'F du Plessis', 'Harbhajan Singh', 'Imran Tahir', 'RA Jadeja', 'KV Sharma', 'M Santner', 
+            'M Muralitharan', 'P Negi', 'R Ashwin', 'S Badree', 'S Randiv', 'S Vidyut', 'SB Jakati', 'SK Raina',
+            'PP Chawla', 'RS Gavaskar', 'S Ladda', 'Shakib Al Hasan', 'SMSM Senanayake', 'SP Narine', 'YK Pathan']
+
+dc_spin = ['A Mishra', 'AA Jhunjhunwala', 'Ankit Sharma', 'CL White', 'PP Ojha', 'DB Ravi Teja', 'JP Duminy',
+           'LPC Silva', 'R Sharma', 'RG Sharma', 'S Dhawan', 'Shahid Afridi', 'TL Suman', 'Y Venugopal Rao']
+
+dd_spin = ['A Mishra', 'AJ Finch', 'AR Patel', 'BMAJ Mendis', 'DL Vettori', 'GJ Maxwell', 'H Vihari', 'Imran Tahir',
+           'J Suchith', 'J Botha', 'J Yadav', 'JP Duminy', 'KP Pietersen', 'MK Tiwary', 'P Negi', 'R Sharma', 
+           'R Tewatia', 'RE van der Merwe', 'S Ladda', 'S Lamichhane', 'S Nadeem', 'S Sriram', 'Shoaib Malik', 
+           'TM Dilshan', 'Sunny Gupta', 'V Sehwag', 'Y Venugopal Rao', 'Yuvraj Singh', 'Y Nagar']
+
+srh_spin = ['A Mishra', 'Ankit Sharma', 'Bipul Sharma', 'CL White', 'DJ Hooda', 'KS Williamson', 'KV Sharma',
+            'Mohammad Nabi', 'Parvez Rasool', 'Rashid Khan', 'S Nadeem', 'Shakib Al Hasan', 'Y Venugopal Rao', 'YK Pathan',
+            'Yuvraj Singh']
+
+rr_spin = ['A Chandila', 'AA Chavan', 'AA Jhunjhunwala', 'AC Voges', 'AJ Finch', 'AL Menaria', 'Ankit Sharma',
+           'AS Raut', 'BJ Hodge', 'D Short', 'DJ Hooda', 'D Salunkhe', 'GB Hogg', 'I Sodhi', 'J Botha', 'K Gowtham',
+           'L Livingstone', 'LRPL Taylor', 'M Lomror', 'PV Tambe', 'ND Doshi', 'R Parag', 'R Tewatia', 'S Badree',
+           'S Gopal', 'RA Jadeja', 'S Midhun', 'SK Warne', 'YK Pathan']
+
+punj_spin = ['AC Gilchrist', 'AR Patel', 'BA Bhatt', 'Bipul Sharma', 'DJ Hussey', 'GJ Maxwell', 'Gurkeerat Singh'
+            'H Brar', 'Karanveer Singh', 'KC Cariappa', 'M Ashwin', 'M Kartik', 'M Ur Rahman', 'M Vijay', 'MK Tiwary',
+             'P Sahu', 'PP Chawla', 'R Ashwin', 'R Tewatia', 'RR Powar', 'Shivam Sharma', 'SN Khan', 'Swapnil Singh',
+             'V Chakravarthy', 'Yuvraj Singh']
+```
+
+```{python}
+df.loc[(df.bowling_team=='Royal Challengers Bangalore')&(df.bowler.isin(rcb_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Delhi Capitals')&(df.bowler.isin(dd_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Mumbai Indians')&(df.bowler.isin(mi_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Chennai Super Kings')&(df.bowler.isin(csk_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Kings XI Punjab')&(df.bowler.isin(punj_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Sunrisers Hyderabad')&(df.bowler.isin(srh_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Kolkata Knight Riders')&(df.bowler.isin(kkr_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Deccan Chargers')&(df.bowler.isin(dc_spin)),'bowler'] = 'spinner'
+df.loc[(df.bowling_team=='Rajasthan Royals')&(df.bowler.isin(rr_spin)),'bowler'] = 'spinner'
+```
+
+```{python}
+l = ['spinner']
+df.loc[~df.bowler.isin(l),'bowler'] = 'pacer'
+```
+
+```{python}
+df.loc[df.bowler=='pacer']
+```
+
+```{python}
+df.loc[df.bowler=='spinner']
+```
+
+```{python}
+# sanity check - check for NaN values in `bowler` column
+
+df.bowler.isna().sum()
+```
+
+```{python}
+playoff = ['3rd Place Playoff', 'eliminator', 'final', 'semi-final1', 'semi-final2', 'semi-final']
+df.loc[df.match_id.isin(playoff), 'match_id'] = 'playoffs'
+```
+
+```{python}
+df.loc[df.match_id=='playoffs']
+```
+
+```{python}
+p = ['playoffs']
+df.loc[~df.match_id.isin(p),'match_id'] = 'round-robin'
+```
+
+```{python}
+df.loc[df.match_id=='round-robin']
+```
+
+```{python}
+df.rename(columns={"match_id": "match_type", "bowler": "bowler_type"})
+```
+
+```{python}
+df.drop(labels='penalty_runs', axis=1, inplace=True)
+df.drop(labels=1614, axis=0, inplace=True)
+```
+
+```{python}
+#| scrolled: true
+df.head()
+```
+
+```{python}
+import re
+def lower_comm(x):
+    return x.lower()
+df['commentary'] = df['commentary'].apply(lower_comm)
+```
+
+```{python}
+full_toss_length = ['full toss', 'beamer', 'full-toss', 'fulltoss']
+yorker_length = ['yorker', 'yorker length', 'yorker-ish', 'blockhole', 'block-hole', 'block hole', 'toe-crusher', 'toe crusher']
+full_length = ['full', 'full and straight', 'full length', 'fullish', 'full-ish', 'fuller', 'very full', 'full ball', 'full delivery', 'forward', 'front foot', 'flicked off the pads', 'glanced off the pads', 'flicks off the pad', 'off the pads', 'off the pad',
+               'clips', 'clipped', 'pads', 'on the pad', 'into the pads', 'cover drive', 'front', 'beaten', 'beaten on the drive','pitches it up', 'full on', 'slog', 'slogs', 'flat and quick',
+               'onto the pads', 'aimed at leg stump', 'aimed at leg-stump', 'pitched at leg stump', 'floated up', 'floats', 'floating', 'flights', 'flight', 'inside out', 'in the slot', 'slot delivery', 'long on', 'long-on',
+               'flighted', 'flighting', 'tossed up', 'overpitched', 'overpitching', 'overpitches', 'pitched up', 'half-volley', 'half volley', 'loopy', 'looping', 'reverse sweep', 'down the ground',
+               'reverse-sweep', 'sweep', 'sweeping', 'paddled', 'paddle', 'paddles', 'slog swept', 'slog-sweep', 'off-drive', 'straight-drive', 'worked', 'works', 'meeting the pitch', 'lunges forward', 'cover-drive', 'cover drive',
+               'off drive', 'slog-sweeps', 'straight drive', 'on-drive', 'on drive', 'helicopter shot', 'helicopter', 'over cover', 'over extra cover', 'pitch of the ball', 'to the pitch', 'slower full', 'slower, full']
+good_length = ['length ball', 'good length', 'length delivery', 'at a length', ', length,', 'length', 'peach', 'corridor of uncertainty', 'punched', 'googly', 'cramped', 'cramps', 'cramping', 'thigh pad', 'cramp',
+               'goodish', 'good-ish', 'nudges', 'driven on the up', 'slower length ball', 'slower, good length', 'on the up', 'length outside', 'length on', 'tight length']
+short_length = ['short', 'short ball', 'short delivery', 'bouncer', 'pulled', 'hooked', 'pulling', 'hooking', 'pull', 'hook', 
+                'back of a length', 'back of length', 'back of good length', 'back foot', 'back-foot', 'heaved', 'hoicked',
+                'short of good length', 'short length', 'shortish', 'short-ish', 'cuts', 'cut', 'cutting it', 'cutting the', 'dragged back', 'drags his length back',
+                'back-of-a-length', 'holding back the length']
+```
+
+```{python}
+conditions  = [df.commentary.str.contains('|'.join(full_toss_length)), df.commentary.str.contains('|'.join(yorker_length)), df.commentary.str.contains('|'.join(full_length)), df.commentary.str.contains('|'.join(good_length)), df.commentary.str.contains('|'.join(short_length))]
+choices = ["full toss", "yorker", "full", "good", "short"]
+
+df["ball_length"] = np.select(conditions, choices, default=np.nan)
+df.head()
+```
+
+## STOP AND GO
+
+```{python}
+df['batsman_runs'] = df['batsman_runs'].astype('int64')
+df['total_runs'] = df['total_runs'].astype('int64')
+df['extra_runs'] = df['extra_runs'].astype('int64')
+df['noball_runs'] = df['noball_runs'].astype('int64')
+df['legbye_runs'] = df['legbye_runs'].astype('int64')
+df['bye_runs'] = df['bye_runs'].astype('int64')
+df['wide_runs'] = df['wide_runs'].astype('int64')
+
+def event_pred(row):
+    if row['batsman_runs']== 0 and row['extra_runs']== 0 and row['total_runs'] == 0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '0 Runs'
+    if row['batsman_runs']==1 and row['extra_runs']==0 and row['total_runs'] == 1 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '1 Run'
+    if row['batsman_runs']==2 and row['extra_runs']==0 and row['total_runs'] == 2 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '2 Runs'
+    if row['batsman_runs']==3 and row['extra_runs']==0 and row['total_runs'] == 3 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '3 Runs'
+    if row['batsman_runs']==4 and row['extra_runs']==0 and row['total_runs'] == 4 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '4 Runs!'
+    if row['batsman_runs']==5 and row['extra_runs']==0 and row['total_runs'] == 5 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '5 Runs'
+    if row['batsman_runs']==6 and row['extra_runs']==0 and row['total_runs'] == 6 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return '6 Runs!'
+    if row['wide_runs']>0 and row['extra_runs']>0 and row['total_runs']>0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (wide)'
+    if row['bye_runs']>0 and row['extra_runs']>0 and row['total_runs']>0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (bye)'
+    if row['legbye_runs']>0 and row['extra_runs']>0 and row['total_runs']>0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (legbye)'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 0 Batsman Runs'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==1 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 1 Batsman Run'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==2 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 2 Batsman Runs'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==3 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 3 Batsman Runs'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==4 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 4 Batsman Runs!'
+    if row['noball_runs']>0 and row['extra_runs']>0 and row['batsman_runs']==6 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras (noball) + 6 Batsman Runs!'
+    if row['dismissal_kind']=='bowled':
+        return 'WICKET (Bowled)!'
+    if row['dismissal_kind']=='caught':
+        return 'WICKET (Caught)!'
+    if row['dismissal_kind']=='caught and bowled':
+        return 'WICKET (Caught & Bowled)!'
+    if row['dismissal_kind']=='hit wicket':
+        return 'WICKET (Hit Wicket)!'
+    if row['dismissal_kind']=='lbw':
+        return 'WICKET (LBW - Leg Before Wicket)!'
+    if row['dismissal_kind']=='obstructing the field':
+        return 'WICKET (Obstructing the Field)!'
+    if row['dismissal_kind']=='retired hurt':
+        return 'Retired Hurt'
+    if row['dismissal_kind']=='run out':
+        return 'WICKET (Run Out)!'
+    if row['dismissal_kind']=='stumped':
+        return 'WICKET (Stumped)!'
+```
+
+```{python}
+df['batsman_runs'] = df['batsman_runs'].astype('int64')
+df['total_runs'] = df['total_runs'].astype('int64')
+df['extra_runs'] = df['extra_runs'].astype('int64')
+df['noball_runs'] = df['noball_runs'].astype('int64')
+df['legbye_runs'] = df['legbye_runs'].astype('int64')
+df['bye_runs'] = df['bye_runs'].astype('int64')
+df['wide_runs'] = df['wide_runs'].astype('int64')
+
+def event_pred(row):
+    if row['batsman_runs']==0 and row['extra_runs']== 0 and row['total_runs'] == 0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Dot'
+    if row['batsman_runs']>0 and row['extra_runs']== 0 and row['total_runs'] > 0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Runs'
+    if row['wide_runs']>0 or row['bye_runs']>0 or row['legbye_runs']>0 or row['noball_runs']>0 or row['batsman_runs']>=0 and row['extra_runs']>0 and row['total_runs']>0 and row['dismissal_kind']!='bowled' and row['dismissal_kind']!='caught' and row['dismissal_kind']!='caught and bowled' and row['dismissal_kind']!='hit wicket' and row['dismissal_kind']!='lbw' and row['dismissal_kind']!='obstructing the field' and row['dismissal_kind']!='retired hurt' and row['dismissal_kind']!='run out' and row['dismissal_kind']!='stumped':
+        return 'Extras'
+    if row['dismissal_kind']=='bowled' or row['dismissal_kind']=='caught' or row['dismissal_kind']=='caught and bowled' or row['dismissal_kind']=='hit wicket' or row['dismissal_kind']=='lbw' or row['dismissal_kind']=='obstructing the field' or row['dismissal_kind']=='retired hurt' or row['dismissal_kind']=='run out' or row['dismissal_kind']=='stumped':
+        return 'WICKET!'
+```
+
+```{python}
+df['event'] = df.apply(lambda row: event_pred(row), axis=1)
+```
+
+```{python}
+df.loc[df.ball_length=='nan'].shape[0]
+# df.loc[df.ball_length=='nan']['commentary'].to_csv('commentary_nan.csv')
+
+# replace all NaN values in `ball_length` column with 'Unknown'
+
+df.loc[df.ball_length=='nan','ball_length'] = 'Unknown'
+```
+
+```{python}
+#| scrolled: true
+#df.loc[(df.ball_length=='nan') & (df.bowler=='spinner'), 'ball_length'] = 'good'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.bowler=='spinner')]
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='Extras (wide)'), 'ball_length'] = 'good'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='Extras (legbye)'), 'ball_length'] = 'full'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='0 Runs') | (df.event=='1 Run') | (df.event=='2 Runs') | (df.event=='3 Runs'), 'ball_length'] = 'good'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='4 Runs!') |  (df.event=='6 Runs!'), 'ball_length'] = 'full'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='5 Runs') | (df.event=='Extras (bye)') | (df.event=='Extras (noball) + 0 Batsman Runs'), 'ball_length'] = 'good'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='Extras (noball) + 6 Batsman Runs!') | (df.event=='Extras (noball) + 4 Batsman Runs!') | (df.event=='Extras (noball) + 1 Batsman Run') | (df.event=='Extras (noball) + 2 Batsman Runs'), 'ball_length'] = 'full'
+```
+
+```{python}
+#df.loc[(df.ball_length=='nan') & (df.event=='WICKET (Caught)!') | (df.event=='WICKET (Run Out)!') | (df.event=='WICKET (Hit Wicket)!'), 'ball_length'] = 'good'
+#df.loc[(df.ball_length=='nan') & (df.event=='WICKET (Bowled)!') | (df.event=='WICKET (LBW - Leg Before Wicket)!') | (df.event=='WICKET (Caught & Bowled)!') | (df.event=='WICKET (Stumped)!'), 'ball_length'] = 'full'
+```
+
+```{python}
+# df.drop(df.loc[df.ball_length=='nan'].index, inplace=True)
+```
+
+```{python}
+df.loc[(df.ball_length=='nan')]
+```
+
+```{python}
+df.loc[df.event=='Dot'].shape[0]
+```
+
+```{python}
+df.loc[df.event=='Runs'].shape[0]
+```
+
+```{python}
+df.loc[df.event=='Extras'].shape[0]
+```
+
+```{python}
+df.loc[df.event=='WICKET!'].shape[0]
+```
+
+```{python}
+#| scrolled: true
+df.dtypes
+```
+
+```{python}
+df['match_id'] = df['match_id'].astype('category')
+df['venue'] = df['venue'].astype('category')
+df['inning'] = df['inning'].astype('category')
+df['batting_team'] = df['batting_team'].astype('category')
+df['bowling_team'] = df['bowling_team'].astype('category')
+df['bowler'] = df['bowler'].astype('category')
+df['ball_length'] = df['ball_length'].astype('category')
+
+df['event'] = df['event'].astype('object')
+
+df['ball'] = df['ball'].astype('float64')
+     
+df['wickets'] = df['wickets'].astype('int64')  
+
+df.drop(labels='commentary', axis=1, inplace=True)
+df.drop(labels='wide_runs', axis=1, inplace=True)
+df.drop(labels='bye_runs', axis=1, inplace=True)
+df.drop(labels='legbye_runs', axis=1, inplace=True)
+df.drop(labels='noball_runs', axis=1, inplace=True)
+df.drop(labels='batsman_runs', axis=1, inplace=True)
+df.drop(labels='extra_runs', axis=1, inplace=True)
+df.drop(labels='total_runs', axis=1, inplace=True)
+df.drop(labels='dismissal_kind', axis=1, inplace=True)
+#df.drop(labels='season', axis=1, inplace=True)
+
+df.head()
+```
+
+```{python}
+df.dtypes
+```
+
+```{python}
+df.describe()
+```
+
+```{python}
+# split the dataset into train and test sets by season
+
+train = df.loc[df.season <= 2018]
+test = df.loc[df.season == 2019]
+
+# drop `season` column from train and test sets
+
+train.drop(labels='season', axis=1, inplace=True)
+test.drop(labels='season', axis=1, inplace=True)
+```
+
+```{python}
+#from sklearn.preprocessing import minmax_scale
+#df[['ball','wickets']] = minmax_scale(df[['ball','wickets']])
+
+encoded_df_train = pd.get_dummies(data=train, columns=['match_id', 'venue', 'inning', 'batting_team', 'bowling_team', 'bowler', 'ball_length'])
+
+encoded_df_test = pd.get_dummies(data=test, columns=['match_id', 'venue', 'inning', 'batting_team', 'bowling_team', 'bowler', 'ball_length'])
+```
+
+```{python}
+#| scrolled: true
+encoded_df_train.columns
+```
+
+```{python}
+print(encoded_df_train.shape)
+print(encoded_df_test.shape)
+
+# 88-12 train-test split
+```
+
+```{python}
+encoded_df_train = encoded_df_train[['ball', 'wickets', 'match_id_playoffs',
+       'match_id_round-robin', 'venue_Ahmedabad', 'venue_Bangalore', 
+       'venue_Chennai', 'venue_Cuttack', 'venue_Delhi',
+       'venue_Dharamsala', 'venue_Hyderabad', 'venue_Indore', 'venue_Kolkata',
+       'venue_Mohali', 'venue_Mumbai', 'venue_Nagpur', 'venue_Pune',
+       'venue_Raipur', 'venue_Rajasthan', 'venue_Ranchi',
+       'venue_Visakhapatnam', 'inning_1', 'inning_2',
+       'batting_team_Chennai Super Kings', 
+       'batting_team_Delhi Capitals', 'batting_team_Kings XI Punjab',
+       'batting_team_Kolkata Knight Riders', 'batting_team_Mumbai Indians',
+       'batting_team_Rajasthan Royals',
+       'batting_team_Royal Challengers Bangalore',
+       'batting_team_Sunrisers Hyderabad', 'bowling_team_Chennai Super Kings',
+       'bowling_team_Delhi Capitals',
+       'bowling_team_Kings XI Punjab', 'bowling_team_Kolkata Knight Riders',
+       'bowling_team_Mumbai Indians', 'bowling_team_Rajasthan Royals',
+       'bowling_team_Royal Challengers Bangalore',
+       'bowling_team_Sunrisers Hyderabad', 'bowler_pacer', 'bowler_spinner',
+       'ball_length_full', 'ball_length_full toss', 'ball_length_good',
+       'ball_length_short', 'ball_length_yorker', 'event']]
+
+encoded_df_test = encoded_df_test[['ball', 'wickets', 'match_id_playoffs',
+       'match_id_round-robin', 'venue_Ahmedabad', 'venue_Bangalore', 
+       'venue_Chennai', 'venue_Cuttack', 'venue_Delhi',
+       'venue_Dharamsala', 'venue_Hyderabad', 'venue_Indore', 'venue_Kolkata',
+       'venue_Mohali', 'venue_Mumbai', 'venue_Nagpur', 'venue_Pune',
+       'venue_Raipur', 'venue_Rajasthan', 'venue_Ranchi',
+       'venue_Visakhapatnam', 'inning_1', 'inning_2',
+       'batting_team_Chennai Super Kings', 
+       'batting_team_Delhi Capitals', 'batting_team_Kings XI Punjab',
+       'batting_team_Kolkata Knight Riders', 'batting_team_Mumbai Indians',
+       'batting_team_Rajasthan Royals',
+       'batting_team_Royal Challengers Bangalore',
+       'batting_team_Sunrisers Hyderabad', 'bowling_team_Chennai Super Kings',
+       'bowling_team_Delhi Capitals',
+       'bowling_team_Kings XI Punjab', 'bowling_team_Kolkata Knight Riders',
+       'bowling_team_Mumbai Indians', 'bowling_team_Rajasthan Royals',
+       'bowling_team_Royal Challengers Bangalore',
+       'bowling_team_Sunrisers Hyderabad', 'bowler_pacer', 'bowler_spinner',
+       'ball_length_full', 'ball_length_full toss', 'ball_length_good',
+       'ball_length_short', 'ball_length_yorker', 'event']]
+```
+
+```{python}
+#| scrolled: true
+encoded_df_train['event'].unique()
+```
+
+```{python}
+X_train = encoded_df_train.iloc[:,:-1].values
+print("X_train shape:", X_train.shape)
+
+y_train = encoded_df_train.iloc[:,-1].values
+print("y_train shape:",y_train.shape)
+
+X_test = encoded_df_test.iloc[:,:-1].values
+print("X_test shape:",X_test.shape)
+
+y_test = encoded_df_test.iloc[:,-1].values
+print("y_test shape:",y_test.shape)
+```
+
+```{python}
+#| scrolled: true
+from sklearn.preprocessing import LabelEncoder
+#encoder = LabelEncoder()
+#y_train = encoder.fit_transform(y_train)
+y_train = pd.get_dummies(y_train).values
+
+#y_test = encoder.fit_transform(y_test)
+y_test = pd.get_dummies(y_test).values
+```
+
+```{python}
+y_test
+```
+
+```{python}
+import tensorflow as tf
+from tensorflow.keras import models, layers, optimizers
+import numpy as np
+```
+
+```{python}
+#| scrolled: true
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Dense(8, input_shape=(46,), activation="relu"),
+    tf.keras.layers.Dropout(0.4),
+    tf.keras.layers.Dense(8, activation="relu"),
+    tf.keras.layers.Dense(4, activation="softmax")
+])
+
+model.summary()
+```
+
+```{python}
+model.compile(loss=tf.keras.losses.CategoricalCrossentropy(),
+              optimizer=optimizers.Adam(learning_rate=1),
+              metrics=['accuracy'])
+```
+
+```{python}
+#| scrolled: true
+#X_train = np.asarray(X_train)
+#y_train = np.asarray(y_train)
+# class_weight = {0: 4.,
+#                 1: 180.,
+#                 2: 1.,
+#                 3: 180.}
+model.fit(X_train,y_train,batch_size=0,epochs=20)
+```
+
+```{python}
+y_pred=model.predict(X_test)
+y_test_class=np.argmax(y_test,axis=1)
+y_pred_class=np.argmax(y_pred,axis=1)
+```
+
+```{python}
+from sklearn.metrics import classification_report,confusion_matrix
+print(classification_report(y_test_class,y_pred_class))
+print(confusion_matrix(y_test_class,y_pred_class))
+```
+
+# Boosting
+
+```{python}
+import random
+from seaborn.palettes import color_palette
+random.seed(1310) # last 4 GUID digits
+from sklearn.datasets import load_breast_cancer
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+import numpy as np
+import pandas as pd
+import warnings
+warnings.filterwarnings('ignore')
+import plotly.io as pio
+#pio.renderers.default = "notebook"
+pio.renderers.default = "plotly_mimetype+notebook_connected"
+```
+
+```{python}
+from sklearn.model_selection import cross_val_score, RepeatedKFold
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier, RandomForestClassifier, StackingClassifier
+from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
+```
+
+```{python}
+from sklearn.preprocessing import LabelEncoder
+
+#X_train = train.iloc[:,:-1].values
+print("X_train shape:", X_train.shape)
+
+#y_train = train.iloc[:,-1].values
+print("y_train shape:",y_train.shape)
+
+#X_test = test.iloc[:,:-1].values
+print("X_test shape:",X_test.shape)
+
+#y_test = test.iloc[:,-1].values
+print("y_test shape:",y_test.shape)
+
+encoder = LabelEncoder()
+y_train = encoder.fit_transform(y_train)
+y_test = encoder.fit_transform(y_test)
+
+#X_train = X_train.to_numpy()
+y_train = y_train.reshape(len(y_train),)
+
+
+#X_test = X_test.to_numpy()
+y_test = y_test.reshape(len(y_test),)
+```
+
+# Perform Classification Routine
+
+```{python}
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.exceptions import DataConversionWarning
+
+ConvergenceWarning('ignore')
+warnings.filterwarnings(action='ignore', category=DataConversionWarning)
+
+def base_models():
+    models = dict()
+    models["Tree"] = DecisionTreeClassifier()
+    models["GNB"] = GaussianNB()
+    models["RF"] = RandomForestClassifier()
+    models["Bagging"] = BaggingClassifier()
+    models["GBM"] = GradientBoostingClassifier()
+    models["XGB"] = XGBClassifier()
+    models["CatBoost"] = CatBoostClassifier()
+    return models
+
+# Function to evaluate the list of models
+def eval_models(model):
+    cv = RepeatedKFold(n_splits=5, n_repeats=2, random_state=1)
+    accuracy = cross_val_score(model, X_train, y_train, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+    weighted_f1 = cross_val_score(model, X_train, y_train, scoring='f1_weighted', cv=cv, n_jobs=-1, error_score='raise')
+    return accuracy, weighted_f1
+
+models = base_models()
+# evaluate the models and store results
+results = {}
+names = list()
+accuracies = []
+weighted_f1s = []
+
+for name, model in models.items():
+    accuracy, weighted_f1 = eval_models(model)
+    accuracies.extend(accuracy)
+    weighted_f1s.extend(weighted_f1)
+    names.extend([name] * len(accuracy))
+    print('>%s Accuracy: %.3f Weighted F1: %.3f' % (name, accuracy.mean(), weighted_f1.mean()))
+```
+
+```{python}
+results['Model'] = names
+results['Accuracy'] = accuracies
+results['Weighted_F1'] = weighted_f1s
+
+classifmod = pd.DataFrame(results)
+```
+
+```{python}
+fig = px.box(classifmod, x="Model", y="Accuracy", color="Model", points='all',
+             labels={"Model": "Machine Learning Model",
+                     "Accuracy": "Accuracy"},
+             title="Model Accuracy Performance")
+fig.show()
+fig.write_html("model_train_accuracies.html")
+```
+
+```{python}
+results['Model'] = names
+results['Accuracy'] = accuracies
+results['Weighted F1'] = weighted_f1s
+
+classifmod = pd.DataFrame(results)
+
+fig = px.box(classifmod, x="Model", y="Weighted_F1", color="Model", points='all',
+             labels={"Model": "Machine Learning Model",
+                     "Weighted_F1": "Weighted f1-Score"},
+             title="Model Weighted f1-Score Performance")
+fig.show()
+fig.write_html("model_train_weighted_f1.html")
+```
+
+```{python}
+from sklearn.metrics import confusion_matrix
+# Train each model on the entire training dataset
+final_models = {}
+for name, model in models.items():
+    final_models[name] = model.fit(X_train, y_train)
+
+# Generate confusion matrices for each final model
+confusion_matrices = {}
+for name, model in final_models.items():
+    y_pred = model.predict(X_test)
+    confusion_matrices[name] = confusion_matrix(y_test, y_pred)
+```
+
+```{python}
+# Plot confusion matrices
+for name, matrix in confusion_matrices.items():
+    plt.figure(figsize=(5, 5))
+    sns.heatmap(matrix, annot=True, fmt="d", cmap="YlGnBu", cbar=False,
+                xticklabels=["Extras", "Dot", "Runs", "Wicket"],
+                yticklabels=["Extras", "Dot", "Runs", "Wicket"])
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title(f"Confusion Matrix - {name}")
+    plt.savefig(f"confusion_matrix_{name}.png")
+    plt.show()
+```
+
+```{python}
+df.loc[(df['event'] == 'WICKET!') & (df['season'] == 2019)].shape[0]
+```
+
+```{python}
+df['event'].unique()
+```
+
+```{python}
+df.loc[(df['season'] == 2009)].shape[0]
+```
+
+```{python}
+df.columns
+```
+
