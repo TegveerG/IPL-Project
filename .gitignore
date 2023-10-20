@@ -1,2 +1,2 @@
 .DS_Store
-pickle_files/*.pkl
+products/pickle_files/*.pkl
