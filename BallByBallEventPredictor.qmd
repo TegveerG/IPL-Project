@@ -43,12 +43,12 @@ import plotly.express as px
 import plotly.io as pio
 #pio.renderers.default = "notebook"
 pio.renderers.default = "plotly_mimetype+notebook_connected"
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.exceptions import DataConversionWarning
 ConvergenceWarning('ignore')
 DataConversionWarning('ignore')
-from sklearn.model_selection import cross_val_score, RepeatedKFold
+from sklearn.model_selection import cross_val_score, RepeatedKFold, GridSearchCV, RandomizedSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -397,7 +397,7 @@ print(df.loc[(df.batting_team=='Delhi Daredevils')|(df.bowling_team=='Delhi Dare
 print(df.loc[(df.batting_team=='Deccan Chargers')|(df.bowling_team=='Deccan Chargers')])
 ```
 
-## Grouping `match_id` Column for Playoffs
+## Cleaning `match_id` Column  
 
 ```{python}
 playoff = ['3rd Place Playoff', 'eliminator', 'final', 'semi-final1', 'semi-final2', 'semi-final']
@@ -472,7 +472,7 @@ df.loc[df.ball_length=='nan','ball_length'] = 'Unknown'
 df.loc[(df.ball_length=='nan')].shape
 ```
 
-## Feature Engineering `total_runs` as a Summation
+## Feature Engineering `cumulative_runs` from `total_runs` per ball 
 
 ```{python}
 # sum total_runs until `inning` doesn't change
@@ -530,6 +530,8 @@ df.loc[df.event=='WICKET!'].shape[0]
 #| scrolled: true
 df.dtypes
 ```
+
+## Dropping Unnecessary Columns 
 
 ```{python}
 df['match_type'] = df['match_type'].astype('category')
@@ -589,6 +591,8 @@ train.drop(labels='season', axis=1, inplace=True)
 test.drop(labels='season', axis=1, inplace=True)
 ```
 
+## Encoding Categorical Features
+
 ```{python}
 #from sklearn.preprocessing import minmax_scale
 #df[['ball','wickets']] = minmax_scale(df[['ball','wickets']])
@@ -609,6 +613,8 @@ print(encoded_df_test.shape)
 
 # 88-12 train-test split
 ```
+
+## Rearranging Columns
 
 ```{python}
 encoded_df_train = encoded_df_train[['ball', 'wickets', 'cumulative_runs', 'match_type_playoffs',
@@ -661,6 +667,8 @@ encoded_df_test = encoded_df_test[['ball', 'wickets', 'cumulative_runs', 'match_
 encoded_df_train['event'].unique()
 ```
 
+## Extracting Features and Response Variable for Training and Testing
+
 ```{python}
 X_train = encoded_df_train.iloc[:,:-1].values
 print("X_train shape:", X_train.shape)
@@ -675,30 +683,17 @@ y_test = encoded_df_test.iloc[:,-1].values
 print("y_test shape:",y_test.shape)
 ```
 
-## Boosting
+## Encoding `y_train` and `y_test` 
 
 ```{python}
-
-#X_train = train.iloc[:,:-1].values
-print("X_train shape:", X_train.shape)
-
-#y_train = train.iloc[:,-1].values
-print("y_train shape:",y_train.shape)
-
-#X_test = test.iloc[:,:-1].values
-print("X_test shape:",X_test.shape)
-
-#y_test = test.iloc[:,-1].values
-print("y_test shape:",y_test.shape)
-
 encoder = LabelEncoder()
+
 y_train = encoder.fit_transform(y_train)
+
 y_test = encoder.fit_transform(y_test)
 
-#X_train = X_train.to_numpy()
 y_train = y_train.reshape(len(y_train),)
 
-#X_test = X_test.to_numpy()
 y_test = y_test.reshape(len(y_test),)
 ```
 
@@ -783,7 +778,7 @@ classification_reports = {}
 for name, model in final_models.items():
     y_pred = model.predict(X_test)
     confusion_matrices[name] = confusion_matrix(y_test, y_pred)
-    classification_reports[name] = classification_report(y_test, y_pred)
+    classification_reports[name] = classification_report(y_test, y_pred, zero_division=0)
 ```
 
 ```{python}
@@ -811,6 +806,8 @@ for name, model in models.items():
     os.remove(pkl_filename)
 ```
 
+## Training Performance Boxplots
+
 ```{python}
 fig = px.box(classifmod, x="Model", y="Accuracy", color="Model", points='all',
              labels={"Model": "Machine Learning Model",
@@ -835,6 +832,8 @@ fig.show()
 fig.write_html("products/plots/model_train_weighted_f1.html")
 ```
 
+## Testing Performance Confusion Matrices
+
 ```{python}
 # Plot confusion matrices
 for name, matrix in confusion_matrices.items():
@@ -848,6 +847,26 @@ for name, matrix in confusion_matrices.items():
     plt.savefig(f"products/plots/confusion_matrix_{name}.png")
     plt.show()
 ```
+
+In our multi-class classification project of predicting ball outcomes in cricket, we evaluated several algorithms, including boosting  (Adaboost, XGBoost, Gradient Boosting, and CatBoost), Gaussian Naive Bayes, Logistic Regression, and Decision Trees. Each of these algorithms exhibit unique strengths and weaknesses, and the choice between them involves striking a balance between different aspects of performance that are discussed below.
+
+**Accuracy vs. Precision and Recall**:
+
+Accuracy, while an essential metric, might not be the sole measure of a model's effectiveness, especially in this imbalanced dataset, where two classes, Extras and Runs, significantly outnumber the others, Dots and Wickets. As can be seen from the confusion matrices above, majority classes dominate the accuracy metric, leading to a misrespresentative view of holistic model performance. In cricket, especially in the scenario of betting, correctly predicting the minority class, Wickets, is of paramount importance.
+
+Precision and recall are crucial metrics in such cases. Precision measures the accuracy of positive predictions, while recall gauges the model's ability to find all the relevant cases in a dataset. From the confusion matrices, we observed that Naive Bayes and Decision Tree (DTree) models exhibited better precision and recall for minority classes. This means that when these models predict a wicket or a boundary ball, they are more likely to be correct. In a business or real-world setting, this could translate to better decision-making and assist organizations that are trying to track illegal betting activity.
+
+**Assessing Trade-Offs and Choosing the Right Model**:
+
+Machine learning models often involve trade-offs. Boosting algorithms, while achieving high overall accuracy and weighted F1 scores, might sometimes sacrifice precision and recall for minority classes in favor of generalizing patterns across the majority class. On the other hand, Naive Bayes and Decision Tree models, being less complex, can capture intricate details in minority classes but might not generalize as well on the majority class.
+
+Therefore, choosing the right model depends on the specific objectives of our prediction task and, eventually, the user who will be utilizing our deployed application. If the focus is on correctly identifying wickets and boundary balls, we might prioritize models like Naive Bayes or Decision Trees. However, if a more balanced performance across all classes is desired, as showcased by Weighted F1-Score, the boosting algorithms could be a better choice.
+
+**Next Steps**:
+
+Next, we shall implement a simple `LGBMClassifier` to see if we can improve the performance of our models. We shall also try tuning the parameters of selected boosting models using `RandomizedSearchCV` to obtain better generalization performance on the minority classes. Fianlly, we will build a stacked classifier with Naive Bayes and Decision Tree as the base estimators and CatBoost as the meta-estimator. We shall then compare the performance of these models with the ones we have already built.
+
+## LightGBM Experiment 
 
 ```{python}
 from sklearn.metrics import accuracy_score, f1_score
@@ -865,5 +884,230 @@ print('Weighted F1 Score: ', f1_score(y_test, y_pred, average='weighted'))
 print('Classification Report: \n', classification_report(y_test, y_pred))
 
 print('Confusion Matrix: \n', confusion_matrix(y_test, y_pred))
+```
+
+# Hyperparameter Tuning With `RandomizedSearchCV`
+
+## XGBoost
+
+```{python}
+# defining parameter range
+param_search = {
+    #'max_depth': [2, 5, 10, 20],
+    #'max_leaves': [0, 1, 3, 5],
+    'learning_rate': [1, 0.1, 0.01],
+    #'n_estimators': [50, 100],
+    'booster': ['gbtree', 'gblinear', 'dart'],
+    'gamma': [0, 0.5, 2, 5],
+    #'min_child_weight': [0, 1, 3, 5],
+}
+
+search = RandomizedSearchCV(XGBClassifier(verbosity=0), param_search, refit = True, verbose = 0, n_iter=25, scoring='f1_weighted', cv = 5, n_jobs=-1)
+
+search.fit(X_train, y_train)
+
+# print best parameter after tuning
+print("The best parameters after tuning are: ", search.best_params_)
+
+# print how our model looks after hyper-parameter tuning
+print("The best model after tuning looks like: ",search.best_estimator_)
+
+# Save to file in the current working directory
+pkl_filename = "products/pickle_files/XGB_Rand_Tuned.pkl"
+with open(pkl_filename, 'wb') as file:
+  pickle.dump(search, file)
+
+# Load from file
+with open(pkl_filename, 'rb') as file:
+  pickle_model = pickle.load(file)
+  score = pickle_model.score(X_test, y_test)
+  print("Grid-Search Tuned XGBoost Test Set Accuracy: {0:.2f} %".format(100 * score))
+  search_predictions = pickle_model.predict(X_test)
+```
+
+```{python}
+conf_matrix = confusion_matrix(y_test, search_predictions)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=["Extras", "Dot", "Runs", "Wicket"], )
+
+# save the plot
+
+disp.plot(cmap='YlGnBu',values_format='d',ax=None)
+plt.title('Test Set Confusion Matrix for Random-Search Tuned XGBoost', fontsize=15, color='#336699',loc='center')
+plt.savefig('products/plots/confusion_matrix_XGB_Rand_Tuned.png')
+```
+
+## AdaBoost
+
+```{python}
+    # defining parameter range
+param_search = {
+    'learning_rate': [1, 0.1, 0.01],
+    'n_estimators': [50, 100, 200],
+    'estimator': [DecisionTreeClassifier(), Sup],
+}
+
+search = RandomizedSearchCV(AdaBoostClassifier(), param_search, refit = True, verbose = 0, n_iter=25, scoring='f1_weighted', cv = 5, n_jobs=-1)
+
+search.fit(X_train, y_train)
+
+# print best parameter after tuning
+print("The best parameters after tuning are: ", search.best_params_)
+
+# print how our model looks after hyper-parameter tuning
+print("The best model after tuning looks like: ",search.best_estimator_)
+
+# Save to file in the current working directory
+pkl_filename = "products/pickle_files/Ada_Rand_Tuned.pkl"
+with open(pkl_filename, 'wb') as file:
+  pickle.dump(search, file)
+
+# Load from file
+with open(pkl_filename, 'rb') as file:
+  pickle_model = pickle.load(file)
+  score = pickle_model.score(X_test, y_test)
+  print("Grid-Search Tuned XGBoost Test Set Accuracy: {0:.2f} %".format(100 * score))
+  search_predictions = pickle_model.predict(X_test)
+```
+
+```{python}
+conf_matrix = confusion_matrix(y_test, search_predictions)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=["Extras", "Dot", "Runs", "Wicket"], )
+
+# save the plot
+
+disp.plot(cmap='YlGnBu',values_format='d',ax=None)
+plt.title('Test Set Confusion Matrix for Random-Search Tuned AdaBoost', fontsize=15, color='#336699',loc='center')
+plt.savefig('products/plots/confusion_matrix_Ada_Rand_Tuned.png')
+```
+
+```{python}
+# remove all pickle files for smooth git push
+
+for name, model in models.items():
+    pkl_filename = f"products/pickle_files/{name}.pkl"
+    os.remove(pkl_filename)
+```
+
+Hyperparameter tuning, unfortunately, resulted in worse performing models. The default parameters of the boosting algorithms seem to be the best fit for our data. Let's now build a `StackingClassifier` with Naive Bayes and Decision Tree as the base estimators and CatBoost as the meta-estimator.
+
+# Creating The Stacked Classifier
+
+```{python}
+def get_stacking():
+    # define the base models
+    level0 = list()
+    level0.append(("GNB", GaussianNB()))
+    level0.append(("Tree", DecisionTreeClassifier()))
+    # define meta learner model
+
+    level1 = CatBoostClassifier(verbose=0)
+
+    # define the stacking ensemble
+    model = StackingClassifier(estimators=level0, final_estimator=level1, cv=10)
+
+    return model
+
+def base_models():
+    models = dict()
+    models["Stacked Model"] = get_stacking()
+    return models
+
+# Function to evaluate the list of models
+def eval_models(model):
+    cv = RepeatedKFold(n_splits=5, n_repeats=2, random_state=1)
+    accuracy = cross_val_score(model, X_train, y_train, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+    weighted_f1 = cross_val_score(model, X_train, y_train, scoring='f1_weighted', cv=cv, n_jobs=-1, error_score='raise')
+    return accuracy, weighted_f1
+```
+
+```{python}
+%%time
+
+models = base_models()
+# evaluate the models and store results
+results = {}
+names = list()
+accuracies = []
+weighted_f1s = []
+
+for name, model in models.items():
+    accuracy, weighted_f1 = eval_models(model)
+    accuracies.extend(accuracy)
+    weighted_f1s.extend(weighted_f1)
+    names.extend([name] * len(accuracy))
+    print('>%s Accuracy: %.3f Weighted F1: %.3f' % (name, accuracy.mean(), weighted_f1.mean()))
+```
+
+## Store Results 
+
+```{python}
+results['Model'] = names
+results['Accuracy'] = accuracies
+results['Weighted_F1'] = weighted_f1s
+
+classifmod1 = pd.DataFrame(results)
+```
+
+## Visualize Train Set Accuracies
+
+```{python}
+fig = px.box(classifmod1, x="Model", y="Accuracy", color="Model", points='all',
+             labels={"Model": "Machine Learning Model",
+                     "Accuracy": "Accuracy"},
+             title="Model Accuracy Performance")
+fig.show()
+fig.write_html("products/plots/stacked_train_accuracies.html")
+```
+
+## Visualize Train Set Weighted f1-Scores
+
+```{python}
+fig = px.box(classifmod1, x="Model", y="Weighted_F1", color="Model", points='all',
+             labels={"Model": "Machine Learning Model",
+                     "Weighted_F1": "Weighted f1-Score"},
+             title="Model Weighted f1-Score Performance")
+fig.show()
+fig.write_html("products/plots/stacked_train_weighted_f1.html")
+```
+
+## Pickle Stacked Classifier
+
+```{python}
+import pickle
+
+level0 = list()
+level0.append(('GNB', GaussianNB()))
+level0.append(('Tree', DecisionTreeClassifier()))
+level1 = XGBClassifier(verbosity=0)
+model = StackingClassifier(estimators=level0, final_estimator=level1, cv=5)
+model.fit(X_train, y_train)
+
+# Save to file in the current working directory
+pkl_filename = "products/pickle_files/stacked.pkl"
+with open(pkl_filename, 'wb') as file:
+  pickle.dump(model, file)
+
+# Load from file
+with open(pkl_filename, 'rb') as file:
+  pickle_model = pickle.load(file)
+  score = pickle_model.score(X_test, y_test)
+  print("Test score: {0:.2f} %".format(100 * score))
+  Y_predict = pickle_model.predict(X_test)
+```
+
+## Test Set Confusion Matrix for Stacked Classifier
+
+```{python}
+from sklearn.metrics import ConfusionMatrixDisplay
+from seaborn import set_palette
+
+conf_matrix = confusion_matrix(y_test, Y_predict)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=["Extras", "Dot", "Runs", "Wicket"], )
+
+# save the plot
+
+disp.plot(cmap='YlGnBu',values_format='d',ax=None)
+plt.title('Test Set Confusion Matrix for Stacked Classifier', fontsize=15, color='#336699',loc='center')
+plt.savefig('products/plots/confusion_matrix_stacked.png')
 ```
 
