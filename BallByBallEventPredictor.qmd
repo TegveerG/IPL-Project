@@ -38,7 +38,6 @@ import matplotlib.pyplot as plt
 %matplotlib inline
 from sklearn.preprocessing import LabelEncoder
 import re
-import numpy as np
 import plotly.express as px
 import plotly.io as pio
 #pio.renderers.default = "notebook"
@@ -104,7 +103,7 @@ df.drop(labels=columns_to_remove, axis=1, inplace=True)
 df.head()
 ```
 
-## Feature Engineering Bowler Type
+## Feature Engineering `bowler_type`
 
 In the code cell below, we have created a custom list of all spin bowlers for each team. We have then modified the `bowler` column in the dataframe which will be used to identify the type of bowler, either "spinner" or "pacer". Therefore, instead of dropping the `bowler` column, we have created a new column `bowler_type` which will be used for our analysis and enhance the predictive power of our models.
 
@@ -397,35 +396,6 @@ print(df.loc[(df.batting_team=='Delhi Daredevils')|(df.bowling_team=='Delhi Dare
 print(df.loc[(df.batting_team=='Deccan Chargers')|(df.bowling_team=='Deccan Chargers')])
 ```
 
-## Cleaning `match_id` Column  
-
-```{python}
-playoff = ['3rd Place Playoff', 'eliminator', 'final', 'semi-final1', 'semi-final2', 'semi-final']
-df.loc[df.match_id.isin(playoff), 'match_id'] = 'playoffs'
-```
-
-```{python}
-df.loc[df.match_id=='playoffs']
-```
-
-```{python}
-p = ['playoffs']
-df.loc[~df.match_id.isin(p),'match_id'] = 'round-robin'
-```
-
-```{python}
-df.loc[df.match_id=='round-robin']
-```
-
-```{python}
-df.rename(columns={"match_id": "match_type", "bowler": "bowler_type"}, inplace=True)
-```
-
-```{python}
-#| scrolled: true
-df.head()
-```
-
 ## Feature Engineering `ball_length` Column from `commentary` Column
 
 ```{python}
@@ -477,11 +447,78 @@ df.loc[(df.ball_length=='nan')].shape
 ```{python}
 # sum total_runs until `inning` doesn't change
 
-df['cumulative_runs'] = df.groupby(['season', 'match_type', 'venue', 'inning', 'batting_team', 'bowling_team'])['total_runs'].cumsum()
+df['cumulative_runs'] = df.groupby(['season', 'match_id', 'venue', 'inning', 'batting_team', 'bowling_team'])['total_runs'].cumsum()
 ```
 
 ```{python}
 df['cumulative_runs']
+```
+
+## Cleaning `match_id` Column  
+
+```{python}
+playoff = ['3rd Place Playoff', 'eliminator', 'final', 'semi-final1', 'semi-final2', 'semi-final']
+df.loc[df.match_id.isin(playoff), 'match_id'] = 'playoffs'
+```
+
+```{python}
+df.loc[df.match_id=='playoffs']
+```
+
+```{python}
+p = ['playoffs']
+df.loc[~df.match_id.isin(p),'match_id'] = 'round-robin'
+```
+
+```{python}
+df.loc[df.match_id=='round-robin']
+```
+
+```{python}
+df.rename(columns={"match_id": "match_type", "bowler": "bowler_type"}, inplace=True)
+```
+
+## Feature Engineering `runs_left_to_win` from `cumulative_runs` per ball 
+
+```{python}
+# Find the rows where inning==1 and the inning changes from 1 to 2 (i.e. the last ball of the first innings)
+last_ball_first_innings = df[(df['inning'] == 1) & (df['inning'].shift(-1) == 2)]
+
+# Calculate the target value for each match
+last_ball_first_innings['target'] = last_ball_first_innings['cumulative_runs'] + 1
+
+# Merge the 'target' column back to the original DataFrame based on matching columns
+df = pd.merge(df, last_ball_first_innings[['season', 'match_type', 'venue', 'inning', 'ball', 'batting_team', 'bowling_team', 'target']],
+               on=['season', 'match_type', 'venue', 'inning', 'ball', 'batting_team', 'bowling_team'], how='left')
+
+# now we have the target column for each ball but it is only populated for the last ball of the first innings
+
+# populate second innings target values for each ball with the target value of the last ball of the first innings
+
+# using while loop to populate target values for each ball in the second innings
+
+i = 0
+
+while i < df.shape[0]:
+    if df.loc[i, 'inning'] == 2:
+        df.loc[i, 'target'] = df.loc[i-1, 'target']
+    i += 1
+
+# populate all first innings target values for each ball with 0
+
+df['target'] = np.where((df['inning']==1), 0, df['target'])
+
+# convert `target` column to runs_left_to_win
+
+df['target'] = np.where((df['inning']==2), df['target']-df['cumulative_runs'], df['target'])
+
+df.rename(columns={"target": "runs_left_to_win"}, inplace=True)
+
+df.head()
+```
+
+```{python}
+df.shape
 ```
 
 ## Feature Engineering `Event` Response Variable
@@ -546,6 +583,7 @@ df['ball_length'] = df['ball_length'].astype('category')
 df['ball'] = df['ball'].astype('float64')
 df['wickets'] = df['wickets'].astype('int64')
 df['cumulative_runs'] = df['cumulative_runs'].astype('int64')
+df['runs_left_to_win'] = df['runs_left_to_win'].astype('int64')
 
 df['event'] = df['event'].astype('object')
 
@@ -572,7 +610,21 @@ df.dtypes
 df.describe()
 ```
 
+```{python}
+# sanity check - get row where runs_left_to_win is max
+
+df.loc[df.runs_left_to_win==df.runs_left_to_win.max()]
+```
+
+```{python}
+# sanity check - get row where runs_left_to_win is min
+
+df.loc[df.runs_left_to_win==df.runs_left_to_win.min()]
+```
+
 ## Train-Test Split
+
+Since the dataset resembles a time-series, the test set has all ball by ball data for the last season (2019) and the training set has all ball by ball data for the seasons prior to 2019. Although recent data is more relevant to the current state of the game, we believe that the training set should have more data to train the model on. Therefore, we have chosen to split the data in this manner.
 
 ```{python}
 # split the dataset into train and test sets by season
@@ -697,7 +749,7 @@ y_train = y_train.reshape(len(y_train),)
 y_test = y_test.reshape(len(y_test),)
 ```
 
-# Perform Classification Routine
+# Perform `RepeatedKFold` Classification Routine
 
 ```{python}
 %%time
@@ -801,9 +853,9 @@ for name, model in models.items():
 
 # delete all pickle files for smooth git push
 
-for name, model in models.items():
-    pkl_filename = f"products/pickle_files/{name}.pkl"
-    os.remove(pkl_filename)
+# for name, model in models.items():
+#     pkl_filename = f"products/pickle_files/{name}.pkl"
+#     os.remove(pkl_filename)
 ```
 
 ## Training Performance Boxplots
@@ -1009,6 +1061,9 @@ def get_stacking():
 
 def base_models():
     models = dict()
+    models["GNB"] = GaussianNB()
+    models["Tree"] = DecisionTreeClassifier()
+    models["XGB"] = XGBClassifier(verbosity=0)
     models["Stacked Model"] = get_stacking()
     return models
 
