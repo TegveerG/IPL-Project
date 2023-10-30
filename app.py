@@ -56,18 +56,98 @@ def predict():
         elif bowling_team == "Sunrisers Hyderabad":
             temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 1]
 
-        overs = float(request.form["overs"])
-        runs = int(request.form["runs"])
-        wickets = int(request.form["wickets"])
-        runs_in_prev_5 = int(request.form["runs_in_prev_5"])
-        wickets_in_prev_5 = int(request.form["wickets_in_prev_5"])
+        overs = float(request.form["Overs"])
+        wickets = int(request.form["Wickets-Fallen"])
+        runs = int(request.form["Runs-Scored"])
+
+        match_type = request.form["Match-Type"]
+        if match_type == "playoffs":
+            temp_array = temp_array + [1, 0]
+        elif match_type == "round-robin":
+            temp_array = temp_array + [0, 1]
+
+        venue = request.form["Venue"]
+        if venue == "Ahmedabad":
+            temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Bangalore":
+            temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Chennai":
+            temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Cuttack":
+            temp_array = temp_array + [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Delhi":
+            temp_array = temp_array + [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Dharamsala":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Hyderabad":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Indore":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Kolkata":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Mohali":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+        elif venue == "Mumbai":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+        elif venue == "Nagpur":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+        elif venue == "Pune":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+        elif venue == "Raipur":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+        elif venue == "Rajasthan":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+        elif venue == "Ranchi":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+        elif venue == "Visakhapatnam":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+
+        inning = int(request.form["Inning"])
+        if inning == 1:
+            temp_array = temp_array + [1, 0]
+        elif inning == 2:
+            temp_array = temp_array + [0, 1]
+
+        batsman_type = request.form["Batsman-Type"]
+        if batsman_type == "Top":
+            temp_array = temp_array + [1, 0, 0]
+        elif batsman_type == "Middle":
+            temp_array = temp_array + [0, 1, 0]
+        elif batsman_type == "Tail":
+            temp_array = temp_array + [0, 0, 1]
+
+        nonstriker_type = request.form["Nonstriker-Type"]
+        if nonstriker_type == "Top":
+            temp_array = temp_array + [1, 0, 0]
+        elif nonstriker_type == "Middle":
+            temp_array = temp_array + [0, 1, 0]
+        elif nonstriker_type == "Tail":
+            temp_array = temp_array + [0, 0, 1]
+
+        bowler_type = request.form["Bowler-Type"]
+        if bowler_type == "Pacer":
+            temp_array = temp_array + [1, 0]
+        elif bowler_type == "Spinner":
+            temp_array = temp_array + [0, 1]
+
+        ball_length = request.form["Ball-Length"]
+        if ball_length == "Random":
+            temp_array = temp_array + [1, 0, 0, 0, 0, 0]
+        elif ball_length == "Full":
+            temp_array = temp_array + [0, 1, 0, 0, 0, 0]
+        elif ball_length == "Full-Toss":
+            temp_array = temp_array + [0, 0, 1, 0, 0, 0]
+        elif ball_length == "Good":
+            temp_array = temp_array + [0, 0, 0, 1, 0, 0]
+        elif ball_length == "Short":
+            temp_array = temp_array + [0, 0, 0, 0, 1, 0]
+        elif ball_length == "Yorker":
+            temp_array = temp_array + [0, 0, 0, 0, 0, 1]
 
         temp_array = temp_array + [
             overs,
             runs,
-            wickets,
-            runs_in_prev_5,
-            wickets_in_prev_5,
+            wickets
         ]
 
         data = np.array([temp_array])

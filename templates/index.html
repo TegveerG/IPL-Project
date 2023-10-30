@@ -70,39 +70,8 @@
             <!-- Prediction Form -->
             <div class='div2'>
                 <form action="{{ url_for('predict') }}" method="POST">
-                    <input class="form-input" type="text" name="Overs" placeholder="Float Type: Over #.Ball #"><br>
-                    <input class="form-input" type="text" name="Wickets Fallen" placeholder="Int Type: Wickets Fallen till Specified Overs"><br>
-                    <input class="form-input" type="text" name="Runs Scored" placeholder="Int Type: Runs Scored till Specified Overs"><br>
-                    <!-- Match Type Dropdown -->
-                    <select class="form-input align-center" name="match-type">
-                        <option value="none">--- Select Match Type ---</option>
-                        <option value="playoffs">Playoffs</option>
-                        <option value="round-robin">Round-Robin</option>
-                    </select><br>
-                    <!-- Venue Dropdown -->
-                    <select class="form-input align-center" name="match-type">
-                        <option value="none">--- Select Match Venue ---</option>
-                        <option value="Ahmedabad">Ahmedabad</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Chennai">Chennai</option>
-                        <option value="Cuttack">Cuttack</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Dharamsala">Dharamsala</option>
-                        <option value="Hyderabad">Hyderabad</option>
-                        <option value="Indore">Indore</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Mohali">Mohali</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Nagpur">Nagpur</option>
-                        <option value="Pune">Pune</option>
-                        <option value="Raipur">Raipur</option>
-                        <option value="Rajasthan">Rajasthan</option>
-                        <option value="Ranchi">Ranchi</option>
-                        <option value="Visakhapatnam">Visakhapatnam</option>
-                    </select><br>
-                    <input class="form-input" type="text" name="Inning" placeholder="Int Type: Inning 1 or 2"><br>
-                    <!-- Batting Team Dropdown -->
-                    <select class="form-input align-center" name="batting-team">
+                     <!-- Batting Team Dropdown -->
+                     <select class="form-input align-center" name="batting-team">
                         <option value="none">--- Select a Batting team ---</option>
                         <option value="Chennai Super Kings">Chennai Super Kings</option>
                         <option value="Delhi Capitals">Delhi Capitals</option>
@@ -125,28 +94,59 @@
                         <option value="Royal Challengers Bangalore">Royal Challengers Bangalore</option>
                         <option value="Sunrisers Hyderabad">Sunrisers Hyderabad</option>
                     </select><br>
+                    <input class="form-input" type="text" name="Overs" placeholder="Float Type: Over #.Ball #"><br>
+                    <input class="form-input" type="text" name="Wickets-Fallen" placeholder="Int Type: Wickets Fallen till Specified Overs"><br>
+                    <input class="form-input" type="text" name="Runs-Scored" placeholder="Int Type: Runs Scored till Specified Overs"><br>
+                    <!-- Match Type Dropdown -->
+                    <select class="form-input align-center" name="Match-Type">
+                        <option value="none">--- Select Match Type ---</option>
+                        <option value="playoffs">Playoffs</option>
+                        <option value="round-robin">Round-Robin</option>
+                    </select><br>
+                    <!-- Venue Dropdown -->
+                    <select class="form-input align-center" name="Venue">
+                        <option value="none">--- Select Match Venue ---</option>
+                        <option value="Ahmedabad">Ahmedabad</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Cuttack">Cuttack</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Dharamsala">Dharamsala</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Indore">Indore</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Mohali">Mohali</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Nagpur">Nagpur</option>
+                        <option value="Pune">Pune</option>
+                        <option value="Raipur">Raipur</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Ranchi">Ranchi</option>
+                        <option value="Visakhapatnam">Visakhapatnam</option>
+                    </select><br>
+                    <input class="form-input" type="text" name="Inning" placeholder="Int Type: Inning 1 or 2"><br>
                     <!-- Batsman Type Dropdown -->
-                    <select class="form-input align-center" name="bowling-team">
+                    <select class="form-input align-center" name="Batsman-Type">
                         <option value="none">--- Select Batsman on Strike ---</option>
                         <option value="Top">Top-Order</option>
                         <option value="Middle">Middle-Order</option>
                         <option value="Tail">Tail-Ender</option>
                     </select><br>
                     <!-- Non-Striker Type Dropdown -->
-                    <select class="form-input align-center" name="bowling-team">
+                    <select class="form-input align-center" name="Nonstriker-type">
                         <option value="none">--- Select Non-Striker Batsman ---</option>
                         <option value="Top">Top-Order</option>
                         <option value="Middle">Middle-Order</option>
                         <option value="Tail">Tail-Ender</option>
                     </select><br>
                     <!-- Bowler Type Dropdown -->
-                    <select class="form-input align-center" name="bowling-team">
+                    <select class="form-input align-center" name="Bowler-Type">
                         <option value="none">--- Select Bowler Type ---</option>
                         <option value="Pacer">Pacer</option>
                         <option value="Spinner">Spinner</option>
                     </select><br>
                     <!--Ball Length Dropdown -->
-                    <select class="form-input align-center" name="bowling-team">
+                    <select class="form-input align-center" name="Ball-Length">
                         <option value="none">--- Select Ball Length ---</option>
                         <option value="Random">Random</option>
                         <option value="Full">Full</option>
