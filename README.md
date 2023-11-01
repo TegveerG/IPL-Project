@@ -23,4 +23,7 @@ Example feature vector (in order) for app inputs:
 12.	Bowler Type: Pacer
 13.	Ball Length: Good
 
+![](app_run.gif)
+
+
 ![](https://wallpapercave.com/wp/wp10935309.jpg)
