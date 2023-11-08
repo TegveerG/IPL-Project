@@ -5,7 +5,11 @@ import numpy as np
 
 # Load the Random Forest CLassifier model
 filename = "./products/pickle_files/XGB_deploy.pkl"
-classifier = pickle.load(open(filename, "rb"))
+
+with open(filename, "rb") as f:
+    classifier = pickle.load(f)
+
+# classifier = pickle.load(open(filename, "rb"))
 
 app = Flask(__name__)
 
