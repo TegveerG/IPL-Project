@@ -1,13 +1,13 @@
 # Importing essential libraries
 from flask import Flask, render_template, request
-import pickle
+import joblib
 import numpy as np
 
 # Load the Random Forest CLassifier model
-filename = "./products/pickle_files/XGB_deploy.pkl"
+filename = "./products/pickle_files/XGB_deploy.joblib"
 
 with open(filename, "rb") as f:
-    classifier = pickle.load(f)
+    classifier = joblib.load(f)
 
 # classifier = pickle.load(open(filename, "rb"))
 
