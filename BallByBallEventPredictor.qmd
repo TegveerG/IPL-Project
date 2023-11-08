@@ -72,7 +72,7 @@ from sklearn.ensemble import (
     AdaBoostClassifier,
 )
 from xgboost import XGBClassifier
-from catboost import CatBoostClassifier
+#from catboost import CatBoostClassifier
 import pickle
 import joblib
 import json
@@ -1708,7 +1708,7 @@ df.drop(labels="extra_runs", axis=1, inplace=True)
 df.drop(labels="dismissal_kind", axis=1, inplace=True)
 df.drop(labels="total_runs", axis=1, inplace=True)
 
-df.to_csv("data/clean/deliveries_clean.csv", index=False)
+#df.to_csv("data/clean/deliveries_clean.csv", index=False)
 
 df.head()
 ```
@@ -1742,11 +1742,11 @@ Since the dataset resembles a time-series, the test set has all ball by ball dat
 
 train = df.loc[df.season <= 2018]
 
-train.to_csv("data/clean/train.csv", index=False)
+#train.to_csv("data/clean/train.csv", index=False)
 
 test = df.loc[df.season == 2019]
 
-test.to_csv("data/clean/test.csv", index=False)
+#test.to_csv("data/clean/test.csv", index=False)
 
 # drop `season` column from train and test sets
 
@@ -1811,6 +1811,7 @@ encoded_df_train = encoded_df_train[
         "ball",
         "wickets",
         "cumulative_runs",
+        "runs_left_to_win",
         "match_type_playoffs",
         "match_type_round-robin",
         "venue_Ahmedabad",
@@ -1871,6 +1872,7 @@ encoded_df_test = encoded_df_test[
         "ball",
         "wickets",
         "cumulative_runs",
+        "runs_left_to_win",
         "match_type_playoffs",
         "match_type_round-robin",
         "venue_Ahmedabad",
@@ -2498,7 +2500,7 @@ plt.savefig("products/plots/confusion_matrix_stacked.png")
 
 # XGBoost, Naive Bayes, Tree Pickle Files for Deployment
 
-## Preprocess Training Data Only 
+## Preprocess Training Data Only (No Test Data Split)
 
 ```{python}
 # split the dataset into train and test sets by season
@@ -2527,6 +2529,7 @@ encoded_df_train = encoded_df_train[
         "ball",
         "wickets",
         "cumulative_runs",
+        "runs_left_to_win",
         "match_type_playoffs",
         "match_type_round-robin",
         "venue_Ahmedabad",
@@ -2650,4 +2653,5 @@ for name, model in tqdm(models.items()):  # Wrap models.items() with tqdm to get
 # Store the fitted model in the final_models dictionary
     final_models[name] = fitted_model
 ```
+
 
