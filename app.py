@@ -85,7 +85,7 @@ def predict():
         batting_team = request.form["batting-team"]
         if batting_team == "Chennai Super Kings":
             temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0]
-        elif batting_team == "Delhi Daredevils":
+        elif batting_team == "Delhi Capitals":
             temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0]
         elif batting_team == "Kings XI Punjab":
             temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0]
@@ -103,7 +103,7 @@ def predict():
         bowling_team = request.form["bowling-team"]
         if bowling_team == "Chennai Super Kings":
             temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0]
-        elif bowling_team == "Delhi Daredevils":
+        elif bowling_team == "Delhi Capitals":
             temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0]
         elif bowling_team == "Kings XI Punjab":
             temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0]
