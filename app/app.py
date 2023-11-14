@@ -3,8 +3,8 @@ from flask import Flask, render_template, request
 import joblib
 import numpy as np
 
-# Load the Random Forest CLassifier model
-filename = "./products/pickle_files/XGB_deploy.joblib"
+# Load the XGBCLassifier model
+filename = "../products/pickle_files/XGB_deploy.joblib"
 
 with open(filename, "rb") as f:
     classifier = joblib.load(f)
