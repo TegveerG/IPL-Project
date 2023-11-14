@@ -1,5 +1,7 @@
 # IPL-Project
 
+![<ins>**LINK TO DEPLOYED HEROKU APPLICATION**</ins>](https://cricket-ipl-ball-predictor-be63ff3525c5.herokuapp.com/)
+
 Final project for DSAN 6700 ML App Deployment.
 
 To run the app locally, clone the repo, cd into it and follow the steps below:
@@ -24,6 +26,3 @@ Example feature vector (in order) for app inputs:
 13.	Ball Length: Good
 
 ![](app_run.gif)
-
-
-![](https://wallpapercave.com/wp/wp10935309.jpg)
