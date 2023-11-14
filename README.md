@@ -1,6 +1,6 @@
 # IPL-Project
 
-![<ins>**LINK TO DEPLOYED HEROKU APPLICATION**</ins>](https://cricket-ipl-ball-predictor-be63ff3525c5.herokuapp.com/)
+[<ins>**LINK TO DEPLOYED HEROKU APPLICATION**</ins>](https://cricket-ipl-ball-predictor-be63ff3525c5.herokuapp.com/)
 
 Final project for DSAN 6700 ML App Deployment.
 
