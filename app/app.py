@@ -8,7 +8,7 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the file
-filename = os.path.join(current_dir, '../products/pickle_files/GNB_deploy.joblib')
+filename = os.path.join(current_dir, './app/pickle_files/GNB_deploy.joblib')
 
 with open(filename, "rb") as f:
     classifier = joblib.load(f)
@@ -181,5 +181,5 @@ def predict():
         )
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    #port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True) # host='0.0.0.0', port=port
