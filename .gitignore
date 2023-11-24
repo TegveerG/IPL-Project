@@ -17,4 +17,4 @@ products/plots/*.png
 products/plots/*.jpeg
 products/plots/*.html
 
-venv/
+venv/*
