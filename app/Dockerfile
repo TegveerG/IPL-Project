@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10
+FROM python:3.10.12-slim
 COPY ../requirements.txt requirements.txt
 WORKDIR /IPL-docker
 RUN pip install -r ../requirements.txt
