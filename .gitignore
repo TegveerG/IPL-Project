@@ -18,3 +18,5 @@ products/plots/*.jpeg
 products/plots/*.html
 
 venv/*
+app/products/pickle_files/*.pkl
+app/products/json_files/*.json

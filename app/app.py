@@ -8,7 +8,7 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the file
-filename = os.path.join(current_dir, '../products/pickle_files/GNB_deploy.joblib')
+filename = os.path.join(current_dir, '/products/pickle_files/GNB_deploy.joblib')
 
 with open(filename, "rb") as f:
     classifier = joblib.load(f)
