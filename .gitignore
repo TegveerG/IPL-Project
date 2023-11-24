@@ -16,3 +16,5 @@ data/clean/*.csv
 products/plots/*.png
 products/plots/*.jpeg
 products/plots/*.html
+
+venv/
