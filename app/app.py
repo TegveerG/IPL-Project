@@ -5,10 +5,10 @@ import numpy as np
 import os
 
 # Get the directory of the current script
-current_dir = os.path.dirname(os.path.abspath(__file__))
+#current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the file
-filename = os.path.join(current_dir, './app/pickle_files/GNB_deploy.joblib')
+filename = './app/pickle_files/GNB_deploy.joblib'
 
 with open(filename, "rb") as f:
     classifier = joblib.load(f)
