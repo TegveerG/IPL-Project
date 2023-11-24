@@ -1,8 +1,17 @@
 # Importing essential libraries
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import joblib
 import numpy as np
 import os
+
+# Import the FeatureProcessor class from the module where you define it
+from src.feature_mapper import FeatureMapper
+from src.feature_processor import FeatureProcessor
+from src.inning_mapper import InningMapper
+from src.match_type_mapper import MatchTypeMapper
+from src.team_mapper import TeamMapper
+from src.venue_mapper import VenueMapper
+
 
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,8 +22,6 @@ filename = os.path.join(current_dir, './products/pickle_files/GNB_deploy.joblib'
 with open(filename, "rb") as f:
     classifier = joblib.load(f)
 
-# classifier = pickle.load(open(filename, "rb"))
-
 app = Flask(__name__)
 
 @app.route("/")
@@ -23,155 +30,22 @@ def home():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    temp_array = list()
-
     if request.method == "POST":
-        overs = float(request.form["Overs"])
-        temp_array = temp_array + [overs]
+        # Create an instance of the FeatureProcessor
+        feature_processor = FeatureProcessor()
 
-        wickets = int(request.form["Wickets-Fallen"])
-        temp_array = temp_array + [wickets]
-
-        runs = int(request.form["Runs-Scored"])
-        temp_array = temp_array + [runs]
-
-        runs_left = int(request.form["Runs-Left"])
-        temp_array = temp_array + [runs_left]
-
-        match_type = request.form["Match-Type"]
-        if match_type == "playoffs":
-            temp_array = temp_array + [1, 0]
-        elif match_type == "round-robin":
-            temp_array = temp_array + [0, 1]
-
-        venue = request.form["Venue"]
-        if venue == "Ahmedabad":
-            temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Bangalore":
-            temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Chennai":
-            temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Cuttack":
-            temp_array = temp_array + [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Delhi":
-            temp_array = temp_array + [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Dharamsala":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Hyderabad":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Indore":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Kolkata":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Mohali":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
-        elif venue == "Mumbai":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-        elif venue == "Nagpur":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
-        elif venue == "Pune":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-        elif venue == "Raipur":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
-        elif venue == "Rajasthan":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
-        elif venue == "Ranchi":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
-        elif venue == "Visakhapatnam":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-
-        inning = int(request.form["Inning"])
-        if inning == 1:
-            temp_array = temp_array + [1, 0]
-        elif inning == 2:
-            temp_array = temp_array + [0, 1]
-
-        batting_team = request.form["batting-team"]
-        if batting_team == "Chennai Super Kings":
-            temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0]
-        elif batting_team == "Delhi Capitals":
-            temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0]
-        elif batting_team == "Kings XI Punjab":
-            temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0]
-        elif batting_team == "Kolkata Knight Riders":
-            temp_array = temp_array + [0, 0, 0, 1, 0, 0, 0, 0]
-        elif batting_team == "Mumbai Indians":
-            temp_array = temp_array + [0, 0, 0, 0, 1, 0, 0, 0]
-        elif batting_team == "Rajasthan Royals":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 1, 0, 0]
-        elif batting_team == "Royal Challengers Bangalore":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 1, 0]
-        elif batting_team == "Sunrisers Hyderabad":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 1]
-
-        bowling_team = request.form["bowling-team"]
-        if bowling_team == "Chennai Super Kings":
-            temp_array = temp_array + [1, 0, 0, 0, 0, 0, 0, 0]
-        elif bowling_team == "Delhi Capitals":
-            temp_array = temp_array + [0, 1, 0, 0, 0, 0, 0, 0]
-        elif bowling_team == "Kings XI Punjab":
-            temp_array = temp_array + [0, 0, 1, 0, 0, 0, 0, 0]
-        elif bowling_team == "Kolkata Knight Riders":
-            temp_array = temp_array + [0, 0, 0, 1, 0, 0, 0, 0]
-        elif bowling_team == "Mumbai Indians":
-            temp_array = temp_array + [0, 0, 0, 0, 1, 0, 0, 0]
-        elif bowling_team == "Rajasthan Royals":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 1, 0, 0]
-        elif bowling_team == "Royal Challengers Bangalore":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 1, 0]
-        elif bowling_team == "Sunrisers Hyderabad":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 0, 0, 1]
-
-        batsman_type = request.form["Batsman-Type"]
-        if batsman_type == "Top":
-            temp_array = temp_array + [1, 0, 0]
-        elif batsman_type == "Middle":
-            temp_array = temp_array + [0, 1, 0]
-        elif batsman_type == "Tail":
-            temp_array = temp_array + [0, 0, 1]
-
-        nonstriker_type = request.form["Nonstriker-Type"]
-        if nonstriker_type == "Top":
-            temp_array = temp_array + [1, 0, 0]
-        elif nonstriker_type == "Middle":
-            temp_array = temp_array + [0, 1, 0]
-        elif nonstriker_type == "Tail":
-            temp_array = temp_array + [0, 0, 1]
-
-        bowler_type = request.form["Bowler-Type"]
-        if bowler_type == "Pacer":
-            temp_array = temp_array + [1, 0]
-        elif bowler_type == "Spinner":
-            temp_array = temp_array + [0, 1]
-
-        ball_length = request.form["Ball-Length"]
-        if ball_length == "Random":
-            temp_array = temp_array + [1, 0, 0, 0, 0, 0]
-        elif ball_length == "Full":
-            temp_array = temp_array + [0, 1, 0, 0, 0, 0]
-        elif ball_length == "Full-Toss":
-            temp_array = temp_array + [0, 0, 1, 0, 0, 0]
-        elif ball_length == "Good":
-            temp_array = temp_array + [0, 0, 0, 1, 0, 0]
-        elif ball_length == "Short":
-            temp_array = temp_array + [0, 0, 0, 0, 1, 0]
-        elif ball_length == "Yorker":
-            temp_array = temp_array + [0, 0, 0, 0, 0, 1]
+        # Process the features based on the incoming request
+        temp_array = feature_processor.process_features(request)
 
         data = np.array([temp_array])
-        my_prediction = int(classifier.predict(data)[0]) # classifier.predict_proba(data)
-
-        # map my_prediction to string value
+        my_prediction = int(classifier.predict(data)[0])
 
         if my_prediction == 0:
             my_prediction = "Extras (Wide, No Ball, Bye, Leg Bye)"
-
         elif my_prediction == 1:
             my_prediction = "Dot Ball"
-
         elif my_prediction == 2:
             my_prediction = "Runs from the bat!"
-
         elif my_prediction == 3:
             my_prediction = "WICKET!"
 
@@ -179,6 +53,36 @@ def predict():
             "result.html",
             my_prediction=my_prediction
         )
+
+# New API route
+@app.route("/api/predict", methods=["POST"])
+def api_predict():
+    try:
+        data = request.json  # Assuming you send the data as JSON in the request body
+        feature_processor = FeatureProcessor()
+
+        # Process the features based on the incoming JSON data
+        temp_array = feature_processor.process_features_json(data)
+
+        data = np.array([temp_array])
+        my_prediction = int(classifier.predict(data)[0])
+
+        if my_prediction == 0:
+            prediction_label = "Extras (Wide, No Ball, Bye, Leg Bye)"
+        elif my_prediction == 1:
+            prediction_label = "Dot Ball"
+        elif my_prediction == 2:
+            prediction_label = "Runs from the bat!"
+        elif my_prediction == 3:
+            prediction_label = "WICKET!"
+
+        response_data = {
+            "prediction": my_prediction,
+            "prediction_label": prediction_label
+        }
+        return jsonify(response_data)
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 if __name__ == "__main__":
     app.run(debug=True)
