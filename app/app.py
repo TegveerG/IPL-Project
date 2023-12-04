@@ -1,19 +1,12 @@
 # Importing essential libraries
-from flask import Flask, render_template, request
+import os
+
 import joblib
 import numpy as np
-import os
+from flask import Flask, render_template, request
 
 # Get the directory of the current script
 #current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Construct the absolute path to the file
-filename = './app/pickle_files/GNB_deploy.joblib'
-
-with open(filename, "rb") as f:
-    classifier = joblib.load(f)
-
-# classifier = pickle.load(open(filename, "rb"))
 
 app = Flask(__name__)
 
@@ -23,6 +16,18 @@ def home():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+
+    selected_model = request.form['model']  # Get the selected model name
+    if selected_model == "Naive Bayes: Best for predicting a wicket, but performs worst when predicting dots and runs":
+        selected_model = "GNB_deploy"
+    elif selected_model == "Decision Tree: As good as Naive Bayes for predicting wickets, and slightly better for predicting runs and dots":
+        selected_model = "Tree_deploy"
+    else:
+        selected_model = "XGB_deploy"
+    # Load the selected model...
+    model_path = f"./app/pickle_files/{selected_model}.joblib"
+    classifier = joblib.load(model_path)
+
     temp_array = list()
 
     if request.method == "POST":
