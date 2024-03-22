@@ -5,27 +5,29 @@
         <meta charset="utf-8">
         <title>Ball Outcome Predictor</title>
         <link rel="shortcut icon" href="{{ url_for('static', filename='ipl-favicon.ico') }}">
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+        <!-- Bootstrap CSS -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.0/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://kit.fontawesome.com/5f3f547070.js" crossorigin="anonymous"></script>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
+        <!-- Your custom CSS -->
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     </head>
+    
 
     <body>
 
         <!-- Website Title -->
-    	<div class="container">
-            <h2 class='container-heading'>
-                <span class='heading_first'>Ball Outcome Predictor for</span>
-                <span class="heading_second">Indian Premier League (IPL)</span>
+        <div class="container">
+            <h2 class="mb-4"> <!-- Add Bootstrap margin-bottom class if needed -->
+                Ball Outcome Predictor for Indian Premier League (IPL)
                 <!-- GitHub Logo and Link -->
-                <a href="https://github.com/TegveerG/IPL-Project" target="_blank" style="vertical-align: middle; margin-left: 10px;">
+                <a href="https://github.com/TegveerG/IPL-Project" target="_blank" class="ms-2"> <!-- Bootstrap margin-start class for spacing -->
                     <img src="{{ url_for('static', filename='github_logo.svg') }}" alt="GitHub" width="30">
                 </a>
             </h2>
-            <div class='description'>
-    			<p>A Machine Learning Web App, Built with Flask, Deployed using Heroku.</p>
-    		</div>
-    	</div>
+            <p>A Machine Learning Web App, Built with Flask, Deployed using Heroku.</p>
+        </div>
+
 
         <!-- Prediction Area -->
         <div class="prediction-area">
